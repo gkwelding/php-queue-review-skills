@@ -1,0 +1,25 @@
+{
+  "name": "php-queue-review-skills",
+  "description": "Background job and queue reliability skills for PHP projects.",
+  "owner": {
+    "name": "Black Pug Ltd"
+  },
+  "plugins": [
+    {
+      "name": "php-queue-review-skills",
+      "source": "./",
+      "displayName": "PHP Queue Review Skills",
+      "description": "Review and write Laravel queued jobs and Symfony Messenger handlers that survive retries, redelivery and transactions.",
+      "license": "MIT",
+      "category": "code-review",
+      "keywords": [
+        "php",
+        "laravel",
+        "symfony",
+        "queues",
+        "messenger"
+      ],
+      "repository": "https://github.com/gkwelding/php-queue-review-skills"
+    }
+  ]
+}

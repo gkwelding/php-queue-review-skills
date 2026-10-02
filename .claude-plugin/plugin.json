@@ -1,0 +1,22 @@
+{
+  "name": "php-queue-review-skills",
+  "displayName": "PHP Queue Review Skills",
+  "description": "Review and write background jobs in Laravel (queues, jobs, listeners, batches, chains) and Symfony Messenger. Catches dispatch-before-commit, non-idempotent retries, timeout/retry_after mismatches, lost failures and serialisation bugs.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Black Pug Ltd"
+  },
+  "license": "MIT",
+  "keywords": [
+    "php",
+    "laravel",
+    "symfony",
+    "queues",
+    "jobs",
+    "messenger",
+    "idempotency",
+    "code-review"
+  ],
+  "homepage": "https://github.com/gkwelding/php-queue-review-skills",
+  "repository": "https://github.com/gkwelding/php-queue-review-skills"
+}
