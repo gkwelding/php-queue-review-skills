@@ -1,0 +1,116 @@
+{
+    "target": "app/ config/queue.php deploy/supervisor/queue-worker.conf",
+    "items": [
+        {
+            "id": "L1",
+            "kind": "bug",
+            "class": "dispatch-in-transaction",
+            "file": "app/Services/CheckoutService.php",
+            "lines": [33, 33],
+            "claim": "ReserveWarehouseStock is dispatched inside DB::transaction() with no after-commit (plain ShouldQueue, connection after_commit false), so a worker can run it before the order and its lines are committed, or for an order that was rolled back. May be reported at the job class (app/Jobs/ReserveWarehouseStock.php) instead."
+        },
+        {
+            "id": "L2",
+            "kind": "bug",
+            "class": "non-idempotent-retry",
+            "file": "app/Jobs/AwardLoyaltyPoints.php",
+            "lines": [28, 33],
+            "claim": "AwardLoyaltyPoints increments loyalty_points before the CRM call; if the CRM call throws, the job is retried (tries 4) and the points are added again."
+        },
+        {
+            "id": "L3",
+            "kind": "bug",
+            "class": "timeout-vs-retry-after",
+            "file": "app/Jobs/BuildSalesExport.php",
+            "lines": [19, 19],
+            "claim": "BuildSalesExport has $timeout = 300 on the redis connection whose retry_after is 180 (config/queue.php:26), so a long export is handed to a second worker while the first is still running."
+        },
+        {
+            "id": "L4",
+            "kind": "bug",
+            "class": "serializes-deleted-model",
+            "file": "app/Jobs/SendAbandonedCartReminder.php",
+            "lines": [16, 18],
+            "claim": "SendAbandonedCartReminder serialises the Cart model (SerializesModels) and runs 3 hours later, but checkout deletes the cart, so the job fails with ModelNotFoundException (no $deleteWhenMissingModels or missing-cart check)."
+        },
+        {
+            "id": "L5",
+            "kind": "bug",
+            "class": "unique-without-uniqueid",
+            "file": "app/Jobs/SyncProductToSearchIndex.php",
+            "lines": [13, 17],
+            "claim": "SyncProductToSearchIndex implements ShouldBeUnique without uniqueId(), so the lock is per class: while one product's sync is queued, syncs for every other product are silently dropped."
+        },
+        {
+            "id": "L6",
+            "kind": "bug",
+            "class": "undefined-rate-limiter",
+            "file": "app/Jobs/PushContactToMailchimp.php",
+            "lines": [26, 26],
+            "claim": "PushContactToMailchimp uses RateLimited('mailchimp') but no limiter with that name is registered (AppServiceProvider registers 'mailchimp-api'), so the job is not rate limited at all."
+        },
+        {
+            "id": "L7",
+            "kind": "decoy",
+            "class": "dispatch-in-transaction",
+            "file": "app/Services/CheckoutService.php",
+            "lines": [32, 32],
+            "claim": "SendOrderConfirmation is dispatched inside the transaction, so it can run before commit or after a rollback.",
+            "why_fine": "The job implements ShouldQueueAfterCommit."
+        },
+        {
+            "id": "L8",
+            "kind": "decoy",
+            "class": "non-idempotent-retry",
+            "file": "app/Jobs/IssueReturnRefund.php",
+            "lines": [26, 39],
+            "claim": "IssueReturnRefund can refund twice when it is retried or runs twice.",
+            "why_fine": "It skips returns already refunded and passes a stable idempotency key that the gateway honours."
+        },
+        {
+            "id": "L9",
+            "kind": "decoy",
+            "class": "timeout-vs-retry-after",
+            "file": "app/Jobs/ArchiveOldOrders.php",
+            "lines": [16, 22],
+            "claim": "ArchiveOldOrders has $timeout = 900, longer than the queue's retry_after, so it can run twice at once.",
+            "why_fine": "It runs on the redis-long connection with retry_after 1000."
+        },
+        {
+            "id": "L10",
+            "kind": "decoy",
+            "class": "serializes-deleted-model",
+            "file": "app/Jobs/SendReviewReplyNotification.php",
+            "lines": [16, 22],
+            "claim": "SendReviewReplyNotification fails with ModelNotFoundException if the review is deleted before it runs.",
+            "why_fine": "$deleteWhenMissingModels = true is declared as the property default."
+        },
+        {
+            "id": "L11",
+            "kind": "decoy",
+            "class": "unique-without-uniqueid",
+            "file": "app/Jobs/RecalculateCustomerSegment.php",
+            "lines": [12, 25],
+            "claim": "RecalculateCustomerSegment is a unique job whose key or lock expiry is wrong (missing uniqueId or uniqueFor).",
+            "why_fine": "It has uniqueId() returning the customer id and uniqueFor 900."
+        },
+        {
+            "id": "L12",
+            "kind": "decoy",
+            "class": "undefined-rate-limiter",
+            "file": "app/Jobs/GeocodeCustomerAddress.php",
+            "lines": [24, 32],
+            "claim": "GeocodeCustomerAddress's RateLimited('geocoding') limiter is undefined, or its releases exhaust the job's tries.",
+            "why_fine": "The 'geocoding' limiter is registered and the job is bounded by retryUntil()."
+        },
+        {
+            "id": "L13",
+            "kind": "decoy",
+            "class": "dispatch-in-transaction",
+            "file": "app/Observers/ProductObserver.php",
+            "lines": [9, 19],
+            "claim": "ProductObserver dispatches from model events, so the job is queued inside the caller's transaction.",
+            "why_fine": "The observer implements ShouldHandleEventsAfterCommit."
+        }
+    ]
+}

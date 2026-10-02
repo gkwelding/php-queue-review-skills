@@ -1,0 +1,17 @@
+framework:
+    messenger:
+        transports:
+            async:
+                dsn: 'redis://redis:6379/messages'
+                retry_strategy:
+                    max_retries: 4
+                    delay: 5000
+                    multiplier: 3
+            outbox: 'doctrine://default?queue_name=outbox'
+
+        routing:
+            App\Message\ReserveStock: async
+            App\Message\SendOrderConfirmation: async
+            App\Message\GenerateShippingLabel: async
+            App\Message\IssueRefund: async
+            App\Message\ExportOrderToErp: outbox

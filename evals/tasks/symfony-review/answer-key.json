@@ -1,0 +1,72 @@
+{
+    "target": "src/ config/packages/messenger.yaml",
+    "items": [
+        {
+            "id": "S1",
+            "kind": "bug",
+            "class": "dispatch-in-transaction",
+            "file": "src/Service/OrderPlacement.php",
+            "lines": [35, 35],
+            "claim": "ReserveStock is dispatched inside wrapInTransaction() to the Redis transport, which sends at once, so a worker can handle it before the order is committed (find() returns null) or for an order that was rolled back."
+        },
+        {
+            "id": "S2",
+            "kind": "bug",
+            "class": "non-idempotent-retry",
+            "file": "src/MessageHandler/IssueRefundHandler.php",
+            "lines": [30, 35],
+            "claim": "IssueRefundHandler refunds without an idempotency key or an already-refunded check; if the flush or the notification after it throws, the retry refunds again."
+        },
+        {
+            "id": "S3",
+            "kind": "bug",
+            "class": "recoverable-permanent-failure",
+            "file": "src/MessageHandler/ReserveStockHandler.php",
+            "lines": [29, 31],
+            "claim": "ReserveStockHandler turns UnknownSkuException (a SKU missing from the warehouse catalogue, a permanent failure) into RecoverableMessageHandlingException, which is retried without limit, ignoring max_retries."
+        },
+        {
+            "id": "S4",
+            "kind": "bug",
+            "class": "entity-in-message",
+            "file": "src/Message/GenerateShippingLabel.php",
+            "lines": [9, 9],
+            "claim": "GenerateShippingLabel carries the Shipment entity instead of its id; the handler gets an unmanaged, stale copy, so setLabelUrl() plus flush() never saves the label URL (and the label can be booked again). May be reported at src/MessageHandler/GenerateShippingLabelHandler.php."
+        },
+        {
+            "id": "S5",
+            "kind": "bug",
+            "class": "missing-failure-transport",
+            "file": "config/packages/messenger.yaml",
+            "lines": [1, 17],
+            "claim": "No failure_transport is configured, so messages that exhaust their retries (or throw UnrecoverableMessageHandlingException) are removed from the transport and lost."
+        },
+        {
+            "id": "S6",
+            "kind": "decoy",
+            "class": "dispatch-in-transaction",
+            "file": "src/Service/OrderPlacement.php",
+            "lines": [36, 36],
+            "claim": "ExportOrderToErp is dispatched inside the transaction, so it can be handled before commit or after a rollback.",
+            "why_fine": "It is routed to the Doctrine transport on the ORM's default connection, so the send joins the transaction and rolls back with it."
+        },
+        {
+            "id": "S7",
+            "kind": "decoy",
+            "class": "dispatch-in-transaction",
+            "file": "src/Service/OrderPlacement.php",
+            "lines": [41, 41],
+            "claim": "SendOrderConfirmation is dispatched before the order is committed.",
+            "why_fine": "It is dispatched after wrapInTransaction() has returned, so after commit."
+        },
+        {
+            "id": "S8",
+            "kind": "decoy",
+            "class": "non-idempotent-retry",
+            "file": "src/MessageHandler/ExportOrderToErpHandler.php",
+            "lines": [24, 38],
+            "claim": "ExportOrderToErpHandler creates the ERP order again when it is retried, redelivered or runs twice.",
+            "why_fine": "It skips orders that already have an ERP reference and upserts by a stable external id."
+        }
+    ]
+}

@@ -78,6 +78,7 @@ skills/
     ├── SKILL.md
     └── rules/              # copy of the above, CI-checked identical
 scripts/build-skills.sh     # packages dist/*.skill for claude.ai
+evals/                      # with/without-skill evals: run.sh, score.php, tasks/ (fixtures, answer keys, hidden tests)
 ```
 
 `rules/` exists in both skills so each can be installed alone. CI (`.github/workflows/check-rules.yml`) fails if the copies differ. Check locally with:
@@ -90,7 +91,9 @@ diff -r skills/review-background-jobs/rules skills/write-background-job/rules
 
 First version. Every class, method, property, config key and default the rules name was checked against the installed sources of Laravel 10.50, 11.57, 12.69 and 13.34, Horizon 5.50, Symfony Messenger and FrameworkBundle 6.4, 7.2, 7.4, 8.0 and 8.1, DoctrineBundle 3.3 and Doctrine ORM 3.7; version differences are noted where they exist. Treat it as a strong starting point and adjust the rules to your own house style.
 
-There is no eval yet. The plan is fixtures with planted reliability bugs (a job dispatched inside a transaction, `$timeout` above `retry_after`, a recoverable exception for a permanent error, a `WithoutOverlapping` with no key, an unrouted message, and clean controls), reviewed with and without the skill and scored by recall (planted bugs found), false positives (findings on clean code), and whether each fix names an API that exists in that fixture's version.
+## Evals
+
+`evals/run.sh` runs each task with and without the skills and scores it objectively. Review tasks are Laravel and Symfony fixture apps with planted reliability bugs and decoys (code that looks risky but is fine); a blind matcher scores each report's recall, decoys flagged and per-class recall against an answer key, with an empty and an all-decoys control report to show the scores can fail. The write task asks for a job with stated reliability requirements and scores it with a hidden PHPUnit suite. Cost, turns and minutes come from `claude -p`. See [evals/README.md](evals/README.md) for what is measured, how to run it, and the first result.
 
 ## Licence
 
