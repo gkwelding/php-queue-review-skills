@@ -60,7 +60,7 @@ reset_app() {
 match() {
     local task=$1 variant=$2 report=$3 name=$1-$2
     (cd "$results" && $score prompt "$root/evals/tasks/$task/answer-key.json" "$report" > "$name.match-prompt.txt" \
-        && claude -p --tools "" --output-format json --json-schema "$($score schema)" --max-budget-usd "$match_budget" \
+        && claude -p --tools "" --setting-sources project --output-format json --json-schema "$($score schema)" --max-budget-usd "$match_budget" \
             --no-session-persistence ${MODEL:+--model "$MODEL"} < "$name.match-prompt.txt" > "$name.match.json" 2> "$name.match.err") \
         || echo "   matcher failed, see $results/$name.match.err" >&2
     (cd "$results" && $score row "$root/evals/tasks/$task/answer-key.json" "$name.match.json" classes.csv "$task" "$variant")
@@ -98,8 +98,9 @@ run_one() {
     fi
 
     echo "== $name"
-    # MSYS_NO_PATHCONV stops Git Bash on Windows rewriting "/review-background-jobs" into a file path.
-    (cd "$dir" && MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' claude -p "$prompt" ${MODEL:+--model "$MODEL"} \
+    # Prompt on stdin: as an argument, Git Bash rewrites "/review-background-jobs" into a file path, and MSYS_NO_PATHCONV
+    # would leak into Claude's own shell. --setting-sources project keeps user plugins and hooks out.
+    (cd "$dir" && printf '%s' "$prompt" | claude -p --setting-sources project ${MODEL:+--model "$MODEL"} \
         --max-budget-usd "$budget" --no-session-persistence --permission-mode "$mode" --output-format json \
         --allowedTools "$tools" > "$out.claude.json" 2> "$out.claude.err") || echo "   claude exited non-zero, see $results/$name.claude.err"
     (cd "$dir" && php -r '$j = json_decode((string) @file_get_contents($argv[1]), true); file_put_contents($argv[2], $j["result"] ?? "");' \
