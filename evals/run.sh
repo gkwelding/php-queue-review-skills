@@ -35,14 +35,15 @@ scaffold() {
     if [ ! -d "$dir/.git" ]; then
         rm -rf "$dir"
         case $fw in
-            laravel) composer create-project -n --quiet laravel/laravel "$dir" ;;
+            # Laravel 13 skeletons ship CLAUDE.md/AGENTS.md telling agents to install Laravel Boost; a run that follows it adds ~75 files and skews the scores.
+            laravel) composer create-project -n --quiet laravel/laravel "$dir" && rm -f "$dir/CLAUDE.md" "$dir/AGENTS.md" ;;
             symfony)
                 composer create-project -n --quiet symfony/skeleton "$dir"
                 (cd "$dir" && composer config extra.symfony.docker false \
                     && composer require -n --quiet symfony/messenger symfony/doctrine-messenger symfony/redis-messenger \
                         doctrine/doctrine-bundle doctrine/orm symfony/lock) ;;
         esac
-        (cd "$dir" && git init -q && git config core.autocrlf false && git add -A \
+        (cd "$dir" && git init -q && git config core.longpaths true && git config core.autocrlf false && git add -A \
             && git -c user.name=eval -c user.email=eval@localhost commit -qm skeleton && git tag skeleton)
     fi
 }
