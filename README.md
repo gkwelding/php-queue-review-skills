@@ -22,8 +22,8 @@ Agent skills for designing and reviewing background jobs in Laravel (queues, job
 ### Claude Code plugin
 
 ```
-/plugin marketplace add gkwelding/php-queue-review-skills
-/plugin install php-queue-review-skills@php-queue-review-skills
+/plugin marketplace add gkwelding/php-unit-tests-skills
+/plugin install php-queue-review-skills@blackpug
 ```
 
 Commands become `/php-queue-review-skills:review-background-jobs <target>` and `/php-queue-review-skills:write-background-job <description>`.
